@@ -12,6 +12,14 @@ apt -y install moreutils
 ipaddr=$(ifdata -pa bond0)
 netmask=$(ifdata -pn bond0)
 gateway=$(route | awk '/^default/ { print $2 }')
+elascidr=${pub_ip}
+
+# Get first usable IP from elastic CIDR
+cidr=$(echo $elascidr | cut -d "/" -f2)
+first3oc=$(echo $elascidr | cut -d. -f1-3)
+lastoc=$(echo $elascidr | cut -d. -f4 | rev | cut -c 4- | rev)
+nextip=$((++lastoc))
+elasip=$first3oc.$nextip"/"$cidr
 
 # Find actual interfaces
 read -r name if1 if2 < <(grep bond-slaves /etc/network/interfaces)
@@ -45,7 +53,7 @@ echo "    mtu 9000" >> /etc/network/interfaces
 echo "" >> /etc/network/interfaces
 echo "auto bridge1:0" >> /etc/network/interfaces
 echo "iface bridge1:0 inet static" >> /etc/network/interfaces
-echo "    address "${pub_ip} >> /etc/network/interfaces
+echo "    address "$elasip >> /etc/network/interfaces
 echo "" >> /etc/network/interfaces
 echo "auto bridge2" >> /etc/network/interfaces
 echo "iface bridge2 inet manual" >> /etc/network/interfaces
@@ -77,7 +85,7 @@ virsh net-autostart bridge2
 ufw logging on
 ufw default deny incoming
 ufw default allow outgoing
-ufw allow ssh
+ufw allow from any to $ipaddr port 22
 ufw --force enable
 
 # Configure forwarding for elastic SUBNET
