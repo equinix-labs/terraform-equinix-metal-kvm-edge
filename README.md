@@ -1,5 +1,5 @@
 # Equinix Metal KVM-Edge
-This script will deploy an edge instance at Equinix Metal using Terraform to pre-configure a server with Ubuntu 20.04 and KVM running in hybrid unbonded mode. 
+This script will deploy an edge instance at Equinix Metal using Terraform to pre-configure a server with Ubuntu 20.04 and KVM running in hybrid unbonded mode.  Using hybrid unbonded mode allows for isolation of the bridges to individual interfaces instead of a single bonded interface.  This will allow you to present virtual interfaces to the VMs in an isolated manner since this will be used for routers and firewalls.
 
 During the install process the following tasks will be completed automatically. 
   1. Server will update and install all required packages
@@ -9,7 +9,8 @@ During the install process the following tasks will be completed automatically.
   5. UFW will be configured to only allow SSH to the MGMT IP.
   6. System will reboot to complete all changes.  
  
- **Be patient after launching the instance, it takes under 10 minutes to complete in most cases.  You can follow the progress using the SOS out of band console**
+ **Be patient after launching the instance, it takes under 10 minutes to complete in most cases<br/>
+ You can follow the progress using the SOS out of band console**
 
 If you need an Equinix Metal account please visit https://console.equinix.com
 
@@ -19,14 +20,13 @@ Find the Equinix Metal documentation at https://metal.equinix.com/developers/doc
 ## Overview
 ![KVM-Edge](https://user-images.githubusercontent.com/74058939/127067235-d354abce-46c1-40b6-9080-cb3a26326073.png)
 
-In this example the management (MGMT) IP for the Instance is 100.100.100.10.<br/>
-The elastic subnet forwarded to the VMs is 100.200.20.8/29.<br/>
-the elastic subnet will be added as an alias to bridge1.<br/>
+In this example the management (MGMT) IP for the Instance is 100.100.100.10<br/>
+The elastic subnet forwarded to the VMs is 100.200.20.8/29<br/>
+the elastic subnet will be added as an alias to bridge1<br/>
+The first usable IP from the elastic block becomes the gateway for all VMs<br/>
 The KVM server is administered on the MGMT IP and only allows for SSH<br/>
-The first IP from the elastic block becomes the gateway for all VMs<br/>
-The default route for the instance is 100.100.100.10<br/>
 
-![kvm-edge-instance](https://user-images.githubusercontent.com/74058939/127162687-98d837f5-9bc7-4bb1-86c1-fdec1e3656ee.png)
+![kvm-edge-instance](https://user-images.githubusercontent.com/74058939/127392292-3980c90e-a80c-45cf-8a38-0b54f8035e0d.png)
 
 ## Installing / Getting started
 
@@ -45,10 +45,10 @@ When you want to remove the edge instance simply run the following command.
 terraform destroy
 ```
 
-## Managing the instance and install your first VM
-SSH is enabled on the management interface from any source by default when using this script and will allow remote management of the instance.<br/>
+## Manage the instance and launch virtual machines
+SSH is enabled on the management interface from any source by default when using this script and will allow remote management of the Metal instance.<br/>
 
-#### EXAMPLE 1:  Use the CLI to deploy a RouterOS VM
+#### EXAMPLE 1:  Use the CLI to deploy a Mikrotik RouterOS VM
 Before we begin, find the public IP that you will assign to this cloud router.  If you look at the output below you will see that a subnet with a /29 network is listed below bridge1.  You will be able to use the next IP in line for this VM and the IP listed as the gateway for the VM.
 
 ```shell
@@ -58,12 +58,12 @@ ip a
     link/ether b4:96:91:84:3d:f8 brd ff:ff:ff:ff:ff:ff
     inet 100.100.100.10/31 brd 255.255.255.255 scope global bridge1
        valid_lft forever preferred_lft forever
-    inet 100.200.20.8/29 brd 100.200.20.14 scope global bridge1:0
+    inet 100.200.20.9/29 brd 100.200.20.14 scope global bridge1:0
        valid_lft forever preferred_lft forever
 ...
 ```
 
-Download and extract the RAW image file and move to /var/lib/libvirt/images/
+Download RouterOS RAW image from Mikrotik.  Unzip the image and move it to /var/lib/libvirt/images/
 
 ```shell
 apt install unzip
@@ -87,26 +87,42 @@ virt-install --name=CloudRouter \
 --noautoconsole
 ```
 
-Now you can connect to the instance and begin the configuration<br/>
-To exit the console use **CTRL + ]**
+
+Before you begin configuring the Cloud Router find your own public IP so you can add it to the safe list for remote managment.  There are many ways to get your public IP but one of the easiest is to use the who command to see current connections on the instance.  This should return your public IP.
 
 ```shell
-virsh console CloudRouter
+root@edge-gateway:~# who
+root     pts/0        2021-01-01 00:00 (100.100.10.207)
 ```
 
-Before you begin configuring the Cloud Router find your own public IP so you can add it to the safe list for remote managment.  There are many ways to get your public IP but one of the easiest is to simply open a local web broswer then go to www.google.com and search for "what is my IP".  This should return your public IP.
 
-For this example we will assign a password to the admin user, setup the public IP and default route then paste a very basic confguration to the CloudRouter.  You will need to assign a public IP to this new VM.
+Now you can connect to the instance and begin the configuration, To exit the console use **CTRL + ]**<br/>
 
 ```shell
+root@edge-gateway:~# virsh console CloudRouter
+Connected to domain CloudRouter
+Escape character is ^]
+MikroTik 6.48.3 (stable)
+MikroTik Login: 
+```
+**The username is admin and there is no password**
+
+For this example we will assign a password to the admin user, setup the public IP and default route then paste a very basic confguration to the CloudRouter.  We will also assign your remote IP to the "safe" list so you can remotely attach to the CloudRouter.  Make sure to adjust the IPs to match your environment.
+
+```shell
+### Modify this part ###
+
 user set admin password=Choose_Your_Own_Password
 ip address add interface=ether1 address=100.200.20.9/29
 ip route add gateway=100.200.20.8
 ip dns set servers=1.1.1.1
 
+### This is the IP you found using the who command earlier ###
+ip firewall address-list add list=safe address=100.100.10.207
+
+### don't modify anything below ###
+
 /ip firewall filter
-add action=add-src-to-address-list address-list=knock address-list-timeout=15s chain=input dst-port=1337 protocol=tcp
-add action=add-src-to-address-list address-list=safe address-list-timeout=15m chain=input dst-port=7331 protocol=tcp src-address-list=knock
 add action=accept chain=input comment="accept established connection packets" connection-state=established
 add action=accept chain=input comment="accept related connection packets" connection-state=related
 add action=drop chain=input comment="drop invalid packets" connection-state=invalid
@@ -154,3 +170,23 @@ add address=203.0.113.0/24 comment=RFC6890 list=not_in_internet
 add address=100.64.0.0/10 comment=RFC6890 list=not_in_internet
 add address=240.0.0.0/4 comment=RFC6890 list=not_in_internet
 add address=192.88.99.0/24 comment="6to4 relay Anycast [RFC 3068]" list=not_in_internet
+```
+
+Now you can add VLANs to the second interface in the Metal portal and configure the VLANs in the RouterOS VM.  In the Metal portal go to "IPs & Networks" then "Layer 2".  Click "Add New VLAN" and add a VLAN to the correct Metro for this instance and give it a name.
+
+![portal-add-vlan](https://user-images.githubusercontent.com/74058939/127400684-3a0a42e4-fd54-44e1-bcd4-b52f85eccc98.png)
+
+Now from the "servers" section of the portal add the VLAN to the instance by going to the "network" menu on the left.  Scroll to the bottom and click "Add New Vlan".  Choose the interface named "eth1" and then pick the VLAN you just created.
+
+![portal-assign-vlan](https://user-images.githubusercontent.com/74058939/127400756-e4d927f4-59aa-4fd7-94db-76e17adc6535.png)
+
+now configure your router to use this VLAN and assign an IP to the VLAN.
+
+```shell
+### this should be your RouterOS console ###
+ /interface vlan add interface=ether2 vlan-id=1000 name=myCoolVLAN
+ /ip address add interface=myCoolVLAN address=10.10.1.1/24
+ /ip firewall nat add chain=srcnat src-address=10.10.1.0/24 action=masquerade
+ ```
+ 
+ Now you can assign your new VLAN to other Metal instances that are in Layer2 mode and use this new subnet with 10.10.1.1 as the gateway.
