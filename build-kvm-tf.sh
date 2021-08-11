@@ -2,7 +2,7 @@
 
 # Update and install packages
 apt update
-apt -y upgrade
+DEBIAN_FRONTEND=noninteractive apt upgrade -y
 apt -y install virt-manager
 apt -y install bridge-utils
 apt -y install ufw
