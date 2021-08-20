@@ -48,6 +48,10 @@ terraform destroy
 ## Manage the instance and launch virtual machines
 SSH is enabled on the management interface from any source by default when using this script and will allow remote management of the Metal instance.<br/>
 
+Now that the script has run you can launch any NFV or VM that you like.  Below is a Mikrotik example to help get you going quickly but any KVM compatible image will work like the Cisco 1000v or Juniper vSRX if you have the image and license.
+
+## Examples:
+
 #### EXAMPLE 1:  Use the CLI to deploy a Mikrotik RouterOS VM
 Before we begin, find the public IP that you will assign to this cloud router.  If you look at the output below you will see that a subnet with a /29 network is listed below bridge1.  You will be able to use the next IP in line for this VM and the IP listed as the gateway for the VM.
 
