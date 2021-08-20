@@ -53,6 +53,8 @@ Now that the script has run you can launch any NFV or VM that you like.  Below i
 ## Examples:
 
 #### EXAMPLE 1:  Use the CLI to deploy a Mikrotik RouterOS VM
+The Mikrotik CHR will only run at 1Mbps per interface in unlicensed mode.  It is very easy to get a 60 day trial that will unlock the full speed of the interfaces.  the permanent license is affordable and easy to get.  Visit https://mikrotik.com/ for more info.
+
 Before we begin, find the public IP that you will assign to this cloud router.  If you look at the output below you will see that a subnet with a /29 network is listed below bridge1.  You will be able to use the next IP in line for this VM and the IP listed as the gateway for the VM.
 
 ```shell
