@@ -7,6 +7,7 @@ apt -y install virt-manager
 apt -y install bridge-utils
 apt -y install ufw
 apt -y install moreutils
+apt -y install cloud-image-utils
 
 # Collect network info for the management interface
 ipaddr=$(ifdata -pa bond0)
