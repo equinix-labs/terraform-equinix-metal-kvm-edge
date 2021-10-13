@@ -12,7 +12,7 @@ apt -y install cloud-image-utils
 # Collect network info for the management interface
 ipaddr=$(ifdata -pa bond0)
 netmask=$(ifdata -pn bond0)
-gateway=$(route | awk '/^default/ { print $2 }')
+gateway=$(route -n | awk '/^0.0.0.0/ { print $2 }')
 elascidr=${pub_ip}
 
 # Get first usable IP from elastic CIDR
