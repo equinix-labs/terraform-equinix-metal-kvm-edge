@@ -16,7 +16,7 @@ If you need an Equinix Metal account please visit https://console.equinix.com
 
 Find the Equinix Metal documentation at https://metal.equinix.com/developers/docs/
 
-## One more thing, this script is experimental and provided as a proof of concept.  The security and maintenance of the systems deployed is something you will need to take seriously and make sure it fits the needs of your environment.  There is no support for this script.
+## This script is experimental and provided as a proof of concept.  The security and maintenance of the systems deployed is something you will need to take seriously and make sure it fits the needs of your environment.  There is no support for this script.
 
 ## Overview
 ![KVM-Edge](https://user-images.githubusercontent.com/74058939/127067235-d354abce-46c1-40b6-9080-cb3a26326073.png)
