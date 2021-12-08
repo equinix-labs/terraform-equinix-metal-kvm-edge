@@ -4,10 +4,11 @@ provider "metal" {
 
 # Provision public IPs to use for the KVM public network
 resource "metal_reserved_ip_block" "routed" {
-  project_id = var.project_id
-  metro      = var.metro
-  type       = "public_ipv4"
-  quantity   = var.public_ips_net
+  project_id  = var.project_id
+  metro       = var.metro
+  type        = "public_ipv4"
+  quantity    = var.public_ips_net
+  description = var.ipblock_desc
 }
 
 # Create and configure the edge instance.
