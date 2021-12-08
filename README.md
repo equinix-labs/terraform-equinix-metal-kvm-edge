@@ -92,6 +92,8 @@ virt-install --name=CloudRouter \
 --os-type=generic \
 --os-variant=generic \
 --noautoconsole
+
+virsh autostart CloudRouter
 ```
 
 
