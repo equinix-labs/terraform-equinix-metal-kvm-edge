@@ -2,12 +2,12 @@
 This script will deploy an edge instance at Equinix Metal using Terraform to pre-configure a server with Ubuntu 20.04 and KVM running in hybrid unbonded mode.  Using hybrid unbonded mode allows for isolation of the bridges to individual interfaces instead of a single bonded interface.  This will allow you to present virtual interfaces to the VMs in an isolated manner since this will be used for routers and firewalls.
 
 During the install process the following tasks will be completed automatically. 
-  1. Server will update and install all required packages
-  2. Bridges for KVM will be automatically created and registered.
-  3. Netfilter will be disabled on the bridges.
-  4. Forwarding will be enabled for the elastic subnet.
-  5. UFW will be configured to only allow SSH to the MGMT IP.
-  6. System will reboot to complete all changes.  
+  * Server will update and install all required packages
+  * Bridges for KVM will be automatically created and registered.
+  * Netfilter will be disabled on the bridges.
+  * Forwarding will be enabled for the elastic subnet.
+  * UFW will be configured to only allow SSH to the MGMT IP.
+  * System will reboot to complete all changes.  
  
  **Be patient after launching the instance, it takes under 10 minutes to complete in most cases<br/>
  You can follow the progress using the SOS out of band console**
