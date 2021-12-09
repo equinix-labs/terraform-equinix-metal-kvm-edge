@@ -73,10 +73,9 @@ ip a
 Download RouterOS RAW image from Mikrotik.  Unzip the image and move it to /var/lib/libvirt/images/
 
 ```shell
-apt install unzip
-wget https://download.mikrotik.com/routeros/6.48.3/chr-6.48.3.img.zip
-unzip chr-6.48.3.img.zip
-mv chr-6.48.3.img /var/lib/libvirt/images/
+wget https://download.mikrotik.com/routeros/7.1/chr-7.1.img.zip
+unzip chr-7.1.img.zip
+mv chr-7.1.img /var/lib/libvirt/images/
 ```
 
 Now that the disk image is in place you can launch the VM 
@@ -86,7 +85,7 @@ virt-install --name=CloudRouter \
 --import \
 --vcpus=2 \
 --memory=1024 \
---disk vol=default/chr-6.48.3.img,bus=sata \
+--disk vol=default/chr-7.1.img,bus=sata \
 --network=network:bridge1,model=virtio \
 --network=network:bridge2,model=virtio \
 --os-type=generic \
@@ -111,25 +110,16 @@ Now you can connect to the instance and begin the configuration, To exit the con
 root@edge-gateway:~# virsh console CloudRouter
 Connected to domain CloudRouter
 Escape character is ^]
-MikroTik 6.48.3 (stable)
+MikroTik 7.1 (stable)
 MikroTik Login: 
 ```
-**The username is admin and there is no password**
+**The username is admin and there is no password** you will be prompted to create a new admin password on your first login
 
-For this example we will assign a password to the admin user, setup the public IP and default route then paste a very basic confguration to the CloudRouter.  We will also assign your remote IP to the "safe" list so you can remotely attach to the CloudRouter.  Make sure to adjust the IPs to match your environment.
+For this example we will paste the scipt below to establish a basic firewall then setup the public IP and default route.  We will also assign your remote IP to the "safe" list so you can remotely attach to the CloudRouter.  Make sure to adjust the IPs to match your environment.
 
 ```shell
-### Modify this part ###
 
-user set admin password=Choose_Your_Own_Password
-ip address add interface=ether1 address=100.200.20.9/29
-ip route add gateway=100.200.20.8
-ip dns set servers=1.1.1.1
-
-### This is the IP you found using the who command earlier ###
-ip firewall address-list add list=safe address=100.100.10.207
-
-### don't modify anything below ###
+### don't modify this part but scroll down to add your IPs###
 
 /ip firewall filter
 add action=accept chain=input comment="accept established connection packets" connection-state=established
@@ -179,6 +169,27 @@ add address=203.0.113.0/24 comment=RFC6890 list=not_in_internet
 add address=100.64.0.0/10 comment=RFC6890 list=not_in_internet
 add address=240.0.0.0/4 comment=RFC6890 list=not_in_internet
 add address=192.88.99.0/24 comment="6to4 relay Anycast [RFC 3068]" list=not_in_internet
+
+/ipv6 firewall filter
+add action=accept chain=input comment="Allow established connections" connection-state=established disabled=no
+add action=accept chain=input comment="Allow related connections" connection-state=related disabled=no
+add action=accept chain=input comment="Allow limited ICMP" disabled=no limit=50/5s,5 protocol=icmpv6
+add action=drop chain=input comment="" disabled=no
+add action=accept chain=forward comment="Allow any to internet" disabled=no out-interface=ether1
+add action=accept chain=forward comment="Allow established connections" connection-state=established disabled=no
+add action=accept chain=forward comment="Allow related connections" connection-state=related disabled=no
+add action=drop chain=forward comment="" disabled=no
+```
+
+### Modify this part ###
+```shell
+ip address add interface=ether1 address=100.200.20.9/29
+ip route add gateway=100.200.20.8
+ip dns set servers=1.1.1.1
+```
+### This is the IP you found using the who command earlier ###
+```shell
+ip firewall address-list add list=safe address=100.100.10.207
 ```
 
 Now you can add VLANs to the second interface in the Metal portal and configure the VLANs in the RouterOS VM.  In the Metal portal go to "IPs & Networks" then "Layer 2".  Click "Add New VLAN" and add a VLAN to the correct Metro for this instance and give it a name.
