@@ -1,4 +1,6 @@
 # Equinix Metal KVM-Edge
+author: Benjamin Jenkins
+
 This script will deploy an edge instance at Equinix Metal using Terraform to pre-configure a server with Ubuntu 20.04 and KVM running in hybrid unbonded mode.  Using hybrid unbonded mode allows for isolation of the bridges to individual interfaces instead of a single bonded interface.  This will allow you to present virtual interfaces to the VMs in an isolated manner since this will be used for routers and firewalls.
 
 During the install process the following tasks will be completed automatically. 
